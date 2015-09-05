@@ -233,6 +233,24 @@ namespace VirtualCoffee.Repository
     }
 
     /// <summary>
+    /// Сведения о покупке
+    /// </summary>
+    public class BuyData
+    {
+        public Double PayedSum { get; set; }
+    }
+
+    public class BuyDataSet : CoffeeDataSet<BuyData>
+    {
+        public override void Initialize(string fileName)
+        {
+            Item.PayedSum = 0;
+
+            Save(fileName);
+        }
+    }
+
+    /// <summary>
     /// Типа контекст данных
     /// </summary>
     public class CoffeDataContext
@@ -240,12 +258,22 @@ namespace VirtualCoffee.Repository
         public GoodsDataSet Goods { get; set; }
         public CoffeMachinePurseDataSet CoffeMachinePurse { get; set; }
         public UserPurseDataSet UserPurse { get; set; }
+        public BuyDataSet PurchaseInfo { get; set; }
+
+        public CoffeDataContext()
+        {
+            Goods = new GoodsDataSet();
+            CoffeMachinePurse = new CoffeMachinePurseDataSet();
+            UserPurse = new UserPurseDataSet();
+            PurchaseInfo = new BuyDataSet();
+        }
 
         public virtual void Load()
         {
             Goods.Load("goods.xml");
             CoffeMachinePurse.Load("coffee.xml");
             UserPurse.Load("user.xml");
+            PurchaseInfo.Load("purchase.xml");
         }
 
         public virtual void Save()
@@ -253,6 +281,7 @@ namespace VirtualCoffee.Repository
             Goods.Save("goods.xml");
             CoffeMachinePurse.Save("coffee.xml");
             UserPurse.Save("user.xml");
+            PurchaseInfo.Save("purchase.xml");
         }
 
         public virtual void Init()
@@ -260,6 +289,7 @@ namespace VirtualCoffee.Repository
             Goods.Initialize("goods.xml");
             CoffeMachinePurse.Initialize("coffee.xml");
             UserPurse.Initialize("user.xml");
+            PurchaseInfo.Initialize("purchase.xml");
         }
 
     }
