@@ -133,6 +133,7 @@ namespace VirtualCoffee.Repository
     {
         public override void Initialize(string fileName)
         {
+            this.Item.Coins.Clear();
             this.Item.Coins.Add(new Coin() { Count = 10, Value = "1" });
             this.Item.Coins.Add(new Coin() { Count = 30, Value = "2" });
             this.Item.Coins.Add(new Coin() { Count = 20, Value = "5" });
@@ -225,7 +226,7 @@ namespace VirtualCoffee.Repository
 
             Item.Goods.Add(new GoodsItem() { Name = "tea", Count = 10, Price = 13 });
             Item.Goods.Add(new GoodsItem() { Name = "coffee", Count = 20, Price = 18 });
-            Item.Goods.Add(new GoodsItem() { Name = "cappucciono", Count = 10, Price = 21 });
+            Item.Goods.Add(new GoodsItem() { Name = "cappuccino", Count = 10, Price = 21 });
             Item.Goods.Add(new GoodsItem() { Name = "juice", Count = 15, Price = 35 });
 
             Save(fileName);
@@ -268,28 +269,28 @@ namespace VirtualCoffee.Repository
             PurchaseInfo = new BuyDataSet();
         }
 
-        public virtual void Load()
+        public virtual void Load(String baseUrl)
         {
-            Goods.Load("goods.xml");
-            CoffeMachinePurse.Load("coffee.xml");
-            UserPurse.Load("user.xml");
-            PurchaseInfo.Load("purchase.xml");
+            Goods.Load(baseUrl + "goods.xml");
+            CoffeMachinePurse.Load(baseUrl + "coffee.xml");
+            UserPurse.Load(baseUrl + "user.xml");
+            PurchaseInfo.Load(baseUrl + "purchase.xml");
         }
 
-        public virtual void Save()
+        public virtual void Save(String baseUrl)
         {
-            Goods.Save("goods.xml");
-            CoffeMachinePurse.Save("coffee.xml");
-            UserPurse.Save("user.xml");
-            PurchaseInfo.Save("purchase.xml");
+            Goods.Save(baseUrl + "goods.xml");
+            CoffeMachinePurse.Save(baseUrl + "coffee.xml");
+            UserPurse.Save(baseUrl + "user.xml");
+            PurchaseInfo.Save(baseUrl + "purchase.xml");
         }
 
-        public virtual void Init()
+        public virtual void Init(String baseUrl)
         {
-            Goods.Initialize("goods.xml");
-            CoffeMachinePurse.Initialize("coffee.xml");
-            UserPurse.Initialize("user.xml");
-            PurchaseInfo.Initialize("purchase.xml");
+            Goods.Initialize(baseUrl + "goods.xml");
+            CoffeMachinePurse.Initialize(baseUrl + "coffee.xml");
+            UserPurse.Initialize(baseUrl + "user.xml");
+            PurchaseInfo.Initialize(baseUrl + "purchase.xml");
         }
 
     }

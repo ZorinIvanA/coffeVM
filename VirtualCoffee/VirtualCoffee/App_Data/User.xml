@@ -1,9 +1,1 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<UserPurse>
-  <Coins>
-    <Coin kind="1" number="10"></Coin>
-    <Coin kind="2" number="30"></Coin>
-    <Coin kind="5" number="20"></Coin>
-    <Coin kind="10" number="15"></Coin>
-  </Coins>
-</UserPurse>
+﻿<UserPurse><Coins><Coin kind="1" number="0" /><Coin kind="2" number="25" /><Coin kind="5" number="18" /><Coin kind="10" number="3" /></Coins></UserPurse>

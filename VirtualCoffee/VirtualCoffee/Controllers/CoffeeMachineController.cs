@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using VirtualCoffee.Models;
 using VirtualCoffee.Repository;
@@ -36,6 +37,7 @@ namespace VirtualCoffee.Controllers
     public class CoffeeMachineController : ApiController
     {
         CoffeDataContext _ctx;
+        String _path = String.Empty;
 
         public CoffeeMachineController(CoffeDataContext ctx)
         {
@@ -45,6 +47,9 @@ namespace VirtualCoffee.Controllers
         public CoffeeMachineController()
         {
             _ctx = new CoffeDataContext();
+            String path = HttpContext.Current.Server.MapPath("~/App_Data")+"\\";
+            _ctx.Load(path);
+            _path = path;
         }
 
         /// <summary>
@@ -56,7 +61,6 @@ namespace VirtualCoffee.Controllers
         {
             return await Task.Run(() =>
             {
-                _ctx.Load();
                 PurseModel model = new PurseModel();
                 model.Coins = new CoinsInPurseModel[_ctx.UserPurse.Item.Coins.Count];
                 Int32 i = 0;
@@ -79,7 +83,6 @@ namespace VirtualCoffee.Controllers
         {
             return await Task.Run(() =>
             {
-                _ctx.Load();
                 PurseModel model = new PurseModel();
                 model.Coins = new CoinsInPurseModel[_ctx.CoffeMachinePurse.Item.Coins.Count];
                 Int32 i = 0;
@@ -98,11 +101,56 @@ namespace VirtualCoffee.Controllers
         }
 
         /// <summary>
+        /// Возвращает список товаров
+        /// </summary>
+        /// <returns>Список товаров</returns>
+        [Route("api/goods")]
+        public async Task<GoodsModel> GetGoods()
+        {
+            return await Task<GoodsModel>.Run(() =>
+            {
+
+                GoodsModel model = new GoodsModel();
+                model.goods = new GoodsItemModel[_ctx.Goods.Item.Goods.Count];
+                Int32 i = 0;
+                foreach (var good in _ctx.Goods.Item.Goods)
+                {
+                    model.goods[i] = new GoodsItemModel()
+                    {
+                        count = good.Count,
+                        price = good.Price,
+                        item = good.Name
+                    };
+                    i++;
+                }
+                return model;
+            });
+        }
+
+        /// <summary>
+        /// Возвращает информацию о покупке (сейчас только потраченная сумма)
+        /// </summary>
+        /// <returns>Информация о покупке</returns>
+        [Route("api/purchaseinfo")]
+        public async Task<PurchaseInfoModel> GetPurchaseInfo()
+        {
+            return await Task.Run(() =>
+            {
+                PurchaseInfoModel model = new PurchaseInfoModel()
+                {
+                    Sum = _ctx.PurchaseInfo.Item.PayedSum
+                };
+                return model;
+            });
+        }
+
+        /// <summary>
         /// Пользователь платит монетку
         /// </summary>
         /// <param name="value">Номинал монетки</param>
         /// <returns>Сведения об ошибке</returns>
         [Route("api/pay")]
+        [HttpGet]
         public async Task<Object> PayCoin([FromUri]Int32 value)
         {
             return await Task<Object>.Run(() =>
@@ -114,7 +162,7 @@ namespace VirtualCoffee.Controllers
                         _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == value.ToString()).Count++;
                         _ctx.UserPurse.Item.Coins.First(x => x.Value == value.ToString()).Count--;
                         _ctx.PurchaseInfo.Item.PayedSum += value;
-                        _ctx.Save();
+                        _ctx.Save(_path);
 
                         return new { error = String.Empty };
                     }
@@ -135,6 +183,7 @@ namespace VirtualCoffee.Controllers
         /// </summary>
         /// <returns>Сообщение об успехе или об ошибке</returns>
         [Route("api/getchange")]
+        [HttpGet]
         public async Task<Object> GetChange()
         {
             return await Task.Run(() =>
@@ -175,6 +224,7 @@ namespace VirtualCoffee.Controllers
                     }
 
                     _ctx.PurchaseInfo.Item.PayedSum = 0;
+                    _ctx.Save(_path);
                     return new
                     {
                         error = String.Empty,
@@ -198,6 +248,7 @@ namespace VirtualCoffee.Controllers
         /// <param name="item">Наименование товара</param>
         /// <returns>Сведения об ошибке или благодарность за покупку</returns>
         [Route("api/buy")]
+        [HttpGet]
         public async Task<Object> BuyItem([FromUri]String item)
         {
             return await Task.Run(() =>
@@ -221,6 +272,7 @@ namespace VirtualCoffee.Controllers
 
                     _ctx.Goods.Item.Goods.First(x => x.Name == item).Count--;
                     _ctx.PurchaseInfo.Item.PayedSum -= goodsItem.Price;
+                    _ctx.Save(_path);
                     return new
                     {
                         error = String.Empty,
@@ -243,11 +295,12 @@ namespace VirtualCoffee.Controllers
         /// </summary>
         /// <returns>Сведения об ошибке</returns>
         [Route("api/init")]
+        [HttpGet]
         public async Task<Object> Initialize()
         {
             return await Task.Run(() =>
             {
-                this._ctx.Init();
+                this._ctx.Init(_path);
                 return new { error = String.Empty };
             });
 

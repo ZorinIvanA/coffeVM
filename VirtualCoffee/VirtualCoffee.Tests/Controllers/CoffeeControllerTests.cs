@@ -10,21 +10,21 @@ namespace VirtualCoffee.Tests.Controllers
 {
     public class DataContextMock : CoffeDataContext
     {
-        public override void Load()
+        public override void Load(String baseUrl)
         {
             Goods.Load("goods.xml");
             CoffeMachinePurse.Load("coffee.xml");
             UserPurse.Load("user.xml");
         }
 
-        public override void Save()
+        public override void Save(String baseUrl)
         {
             Goods.Save("goods.xml");
             CoffeMachinePurse.Save("coffee.xml");
             UserPurse.Save("user.xml");
         }
 
-        public override void Init()
+        public override void Init(String baseUrl)
         {
             Goods.Initialize("goods.xml");
             CoffeMachinePurse.Initialize("coffee.xml");
@@ -53,7 +53,7 @@ namespace VirtualCoffee.Tests.Controllers
         public void InitializeTests()
         {
             _ctx = new DataContextMock();
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _controller = new CoffeMachineControllerForTests(_ctx);
 
         }
@@ -95,7 +95,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestPayCoinShouldSuccess()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             var result = _controller.PayCoin(1).Result;
             Assert.AreEqual(String.Empty, result.GetType().GetProperty("error").GetValue(result));
             Assert.AreEqual(9, _ctx.UserPurse.Item.Coins[0].Count);
@@ -106,7 +106,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestPayCoinShouldSendErrorWhenMoneyFinished()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             for (Int32 i = 0; i < 10; i++)
             {
                 var temp = _controller.PayCoin(1).Result;
@@ -120,7 +120,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestPayCoinShouldSendErrorWhenWrongCoin()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
 
             var result = _controller.PayCoin(20).Result;
             Assert.IsNotNull(result.GetType().GetProperty("error"));
@@ -131,7 +131,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestBuyItemShouldSuccess()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 13;
             var result = _controller.BuyItem("tea").Result;
             Assert.AreEqual(9, _ctx.Goods.Item.Goods[0].Count);
@@ -144,7 +144,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestBuyItemShouldFailWhenLowFunds()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 10;
             var result = _controller.BuyItem("tea").Result;
             Assert.AreEqual(String.Empty,
@@ -156,7 +156,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestBuyItemShouldFailWhenLowGoods()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 15;
             _ctx.Goods.Item.Goods[0].Count = 0;
             var result = _controller.BuyItem("tea").Result;
@@ -169,7 +169,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestBuyItemShouldFailWhenWrongGoods()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 15;
             var result = _controller.BuyItem("sugar").Result;
             Assert.AreEqual(String.Empty,
@@ -181,7 +181,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestGetChangeShouldSucceed()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 15;
             var result = _controller.GetChange().Result;
             Assert.AreEqual(16, _ctx.UserPurse.Item.Coins[3].Count);
@@ -198,7 +198,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestGetChangeShouldFailWhenLowMoneyInMachine()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 15;
             _ctx.CoffeMachinePurse.Item.Coins[3].Count = 0;
             _ctx.CoffeMachinePurse.Item.Coins[2].Count = 0;
@@ -221,7 +221,7 @@ namespace VirtualCoffee.Tests.Controllers
         [TestMethod]
         public void TestGetChangeShouldReturn0_10__2_5__2_2__1_1()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 15;
             _ctx.CoffeMachinePurse.Item.Coins[3].Count = 0;
             _ctx.CoffeMachinePurse.Item.Coins[2].Count = 2;
@@ -236,13 +236,13 @@ namespace VirtualCoffee.Tests.Controllers
             Assert.AreEqual(0, _ctx.CoffeMachinePurse.Item.Coins[3].Count);
             Assert.AreEqual(0, _ctx.CoffeMachinePurse.Item.Coins[2].Count);
             Assert.AreEqual(4, _ctx.CoffeMachinePurse.Item.Coins[1].Count);
-            Assert.AreEqual(6, _ctx.CoffeMachinePurse.Item.Coins[0].Count);            
+            Assert.AreEqual(6, _ctx.CoffeMachinePurse.Item.Coins[0].Count);
         }
 
         [TestMethod]
         public void TestGetTotalMoneyInMachineShouldSuccess()
         {
-            _ctx.Init();
+            _ctx.Init(String.Empty);
             _ctx.PurchaseInfo.Item.PayedSum = 15;
             _ctx.CoffeMachinePurse.Item.Coins[3].Count = 0;
             _ctx.CoffeMachinePurse.Item.Coins[2].Count = 0;
@@ -251,6 +251,37 @@ namespace VirtualCoffee.Tests.Controllers
             Double result = _controller.GetTotalMoneyForTest();
 
             Assert.AreEqual(5, result);
+        }
+
+        [TestMethod]
+        public void TestGetGoodsShouldSucceed()
+        {
+            GoodsModel result = _controller.GetGoods().Result;
+            Assert.IsNotNull(result);
+            Assert.IsNotNull(result.goods);
+            Assert.AreEqual(4, result.goods.Length);
+            Assert.AreEqual("tea", result.goods[0].item);
+            Assert.AreEqual(13, result.goods[0].price);
+            Assert.AreEqual(10, result.goods[0].count);
+            Assert.AreEqual("coffee", result.goods[1].item);
+            Assert.AreEqual(18, result.goods[1].price);
+            Assert.AreEqual(20, result.goods[1].count);
+            Assert.AreEqual("cappuccino", result.goods[2].item);
+            Assert.AreEqual(21, result.goods[2].price);
+            Assert.AreEqual(10, result.goods[2].count);
+            Assert.AreEqual("juice", result.goods[3].item);
+            Assert.AreEqual(35, result.goods[3].price);
+            Assert.AreEqual(15, result.goods[3].count);
+        }
+
+        [TestMethod]
+        public void TestGetPurchaseInfoShouldSuccess()
+        {
+            _ctx.PurchaseInfo.Item.PayedSum = 10;
+            _ctx.Save(String.Empty);
+            PurchaseInfoModel result = _controller.GetPurchaseInfo().Result;
+            Assert.IsNotNull(result);
+            Assert.AreEqual(10, result.Sum);
         }
     }
 }

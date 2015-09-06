@@ -1,3 +1,55 @@
-﻿<div style="margin:0 auto; width:1024px; border: 1px solid #000000;">
+﻿<div style="margin:0 auto; width:1024px;">
+    <div id="top">
+        <input type="button" style="margin:0 auto;" value="Сбросить на начальные значения"
+               data-bind="click: init" />
+    </div>
+    <div id="goods">
+        <h3>Товары в автомате</h3>
+        <ul data-bind="foreach: goods" id="goodsList" class="horizontal-list">
+            <li data-bind="click: $parent.buy">
+                <div>
+                    <h4 data-bind="text: kind"></h4>
+                    <p> <span>Цена </span><span data-bind="text: price"></span></p>
+                    <p> <span>Кол-во </span><span data-bind="text: count"></span></p>
+                </div>
+            </li>
+        </ul>
 
+    </div>
+    <div id="purses">
+        <div id="machinePurse" class="purse" style="float:right;">
+            <h3>Кошелёк автомата</h3>
+            <ul data-bind="foreach: machinePurse" id="machinePurse" class="purse">
+                <li>
+                    <span class="coin" data-bind="text: kind"></span>
+                    <span data-bind="text: count" class="coinsCount"></span>
+                </li>
+            </ul>
+        </div>
+        <div id="userPurse" class="purse">
+            <h3>Кошелёк пользователя</h3>
+            <ul data-bind="foreach: userPurse" id="userPurse" class="purse">
+                <li>
+                    <span class="coin active" data-bind="text: kind, click: $parent.pay"></span>
+                    <span data-bind="text: count" class="coinsCount"></span>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+    <div id="payedSum">
+        <h3>Внесённая сумма</h3>
+        <p id="enteredSum" data-bind="text: sum"></p>
+        <input type="button" id="getChange" value="Забрать сдачу" data-bind="click: askChange" />
+    </div>
+
+    <div id="error" data-bind="display: error()!=''">
+        <p data-bind="text: error"></p>
+    </div>
 </div>
+
+<script>
+    var viewModel = new vCoffeeModel();
+    ko.applyBindings(viewModel);
+    viewModel.init();
+</script>

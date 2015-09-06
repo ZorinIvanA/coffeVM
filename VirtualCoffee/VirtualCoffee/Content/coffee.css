@@ -1,0 +1,83 @@
+﻿html, body {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+div#top {
+    margin: 0 auto;
+}
+
+div#goods {
+    width: 100%;
+}
+
+h3 {
+    margin: 0 auto;
+}
+
+div.purse {
+    width: 50% !important;
+}
+
+ul.horizontal-list {
+}
+
+    ul.horizontal-list li {
+        display: inline-block;
+    }
+
+ul#goodsList {
+}
+
+    ul#goodsList li {
+        margin-left: 20px;
+        margin-right: 20px;
+        cursor: pointer;
+        border: 1px solid;
+        list-style-type: none;
+        border-radius: 20px;
+        width: 100px;
+        height: 120px;
+        padding-left: 20px;
+    }
+
+        ul#goodsList li:hover {
+            background-color: lightblue;
+            border: 1px solid lightblue;
+        }
+
+ul.purse li {
+    list-style-type: none;
+}
+
+    ul.purse li span.coin {
+        display: inline-block;
+        height: 30px;
+        width: 30px;
+        border: 1px solid silver;
+        border-radius: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 15pt;
+        background-color: silver;
+    }
+
+    ul.purse li span.active {
+        cursor: pointer;
+    }
+
+        ul.purse li span.active:hover {
+            background-color: gold;
+            border-color: gold;
+        }
+
+span.coinsCount {
+    padding-left: 10px;
+}
+
+div#error {
+    color: red;
+    font-size: 18pt;
+}

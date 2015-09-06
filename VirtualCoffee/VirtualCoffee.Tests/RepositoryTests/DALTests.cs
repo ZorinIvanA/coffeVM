@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VirtualCoffee;
 using VirtualCoffee.Repository;
 using System.Xml;
+using System.IO;
 
 namespace VirtualCoffee.Tests.RepositoryTests
 {
@@ -32,6 +33,14 @@ namespace VirtualCoffee.Tests.RepositoryTests
             Assert.AreEqual(100, coffee.Item.Coins[2].Count);
             Assert.AreEqual("10", coffee.Item.Coins[3].Value);
             Assert.AreEqual(100, coffee.Item.Coins[3].Count);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(FileNotFoundException))]
+        public void TestLoadShouldThrowFileNotFound()
+        {
+            CoffeMachinePurseDataSet coffee = new CoffeMachinePurseDataSet();
+            coffee.Load("bla-bla.xml");
         }
 
         [TestMethod]
@@ -97,7 +106,7 @@ namespace VirtualCoffee.Tests.RepositoryTests
             Assert.AreEqual("coffee", goods.ChildNodes[1].Attributes["kind"].Value);
             Assert.AreEqual(20, Int32.Parse(goods.ChildNodes[1].Attributes["number"].Value));
             Assert.AreEqual(18, Double.Parse(goods.ChildNodes[1].Attributes["price"].Value));
-            Assert.AreEqual("cappucciono", goods.ChildNodes[2].Attributes["kind"].Value);
+            Assert.AreEqual("cappuccino", goods.ChildNodes[2].Attributes["kind"].Value);
             Assert.AreEqual(10, Int32.Parse(goods.ChildNodes[2].Attributes["number"].Value));
             Assert.AreEqual(21, Double.Parse(goods.ChildNodes[2].Attributes["price"].Value));
             Assert.AreEqual("juice", goods.ChildNodes[3].Attributes["kind"].Value);
@@ -126,7 +135,13 @@ namespace VirtualCoffee.Tests.RepositoryTests
             Assert.AreEqual(20, Int32.Parse(userPurse.ChildNodes[2].Attributes["number"].Value));
             Assert.AreEqual("10", userPurse.ChildNodes[3].Attributes["kind"].Value);
             Assert.AreEqual(15, Int32.Parse(userPurse.ChildNodes[3].Attributes["number"].Value));
+        }
 
+        [TestMethod]
+        public void TestInitPurchase()
+        {
+            CoffeDataContext _ctx = new CoffeDataContext();
+            _ctx.Init(String.Empty);
         }
     }
 }

@@ -4,10 +4,13 @@
     <title>Виртуальная кофе-машина</title>
 </head>
 <body>
-    @RenderBody()
-
+    
+    @Scripts.Render("~/Scripts/knockoutjs.js")
+    @Scripts.Render("~/Scripts/vcoffeemodel.js")
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+    <link href="~/Content/coffee.css" type="text/css" rel="stylesheet"/>
     @RenderSection("scripts", required: false)
+    @RenderBody()
 </body>
 </html>
