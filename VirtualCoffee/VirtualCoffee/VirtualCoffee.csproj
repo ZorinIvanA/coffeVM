@@ -178,7 +178,6 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AccountViewModels.cs" />
-    <Compile Include="Models\GoodsItem.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Models\apiModels.cs" />
@@ -191,6 +190,8 @@
     <Content Include="App_Data\Coffee.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="App_Data\goods.xml" />
+    <Content Include="App_Data\purchase.xml" />
     <Content Include="App_Data\User.xml">
       <SubType>Designer</SubType>
     </Content>

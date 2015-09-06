@@ -1,10 +1,11 @@
-﻿function vCoffeeModel() {
+﻿//Модель представления кофе-машины
+function vCoffeeModel() {
     var self = this;
 
-    this.prototype = {
-
-    };
     self.baseUrl = window.location.href;
+    self.error = ko.observable();
+
+    //Кошелёк пользователя
     self.userPurse = ko.observableArray();
     self.getUserPurse = function () {
         return $.ajax({ url: this.baseUrl + "/api/userpurse" });
@@ -18,7 +19,7 @@
         });
     }
 
-
+    //Кошелёк автомата
     self.machinePurse = ko.observableArray();
     self.getMachinePurse = function () {
         return $.ajax({ url: this.baseUrl + "/api/machinepurse" });
@@ -33,6 +34,7 @@
         });
     }
 
+    //Товары
     self.goods = ko.observableArray();
     self.getGoods = function () {
         return $.ajax({ url: this.baseUrl + "/api/goods" });
@@ -47,14 +49,13 @@
         });
     }
 
-    self.error = ko.observable();
-
+    //Дополнительные сведения
     self.sum = ko.observable();
     self.getPurchaseInfo = function () {
         return $.ajax({ url: this.baseUrl + "/api/purchaseinfo" });
     };
 
-
+    //Загрузка всех данных из файла
     self.load = function () {
         this.goods.removeAll();
         this.userPurse.removeAll();
@@ -73,6 +74,7 @@
             });
     };
 
+    //Инициализация стартовыми значениями
     self.init = function () {
         $.when(
             $.ajax({ url: self.baseUrl + "api/init" })).then(function () {
@@ -80,38 +82,43 @@
             });
     }
 
+    //Заплатить монетку
     self.pay = function (coin) {
         $.when(
             $.ajax({ url: self.baseUrl + "api/pay?value=" + coin.kind })).then(function (data) {
-                if (data.error) {
-                    self.error("Ошибка! " + data.error);
-                }
-                else { self.error(""); }
+                self.showError(data);
                 self.load();
             });
     }
 
+    //Купить товар
     self.buy = function (goodsItem) {
         $.when(
             $.ajax({ url: self.baseUrl + "api/buy?item=" + goodsItem.kind })).then(function (data) {
-                if (data.error) {
-                    self.error("Ошибка! " + data.error);
-                }
-                else { self.error(""); }
+                self.showError(data);
                 self.load();
+                if (!data.error) {
+                    alert("Спасибо за покупку!")
+                }
             });
 
     }
 
+    //Попросить сдачу
     self.askChange = function () {
         $.when(
-            $.ajax({ url: self.baseUrl + "api/getchange" })).then(function () {
+            $.ajax({ url: self.baseUrl + "api/getchange" })).then(function (data) {
                 self.load();
-                if (data.error) {
-                    self.error("Ошибка! " + data.error);
-                }
-                else { self.error(""); }
+                self.showError(data);
             });
+    }
+
+    //Показать или скрыть ошибку
+    self.showError = function (data) {
+        if (data.error) {
+            self.error("Ошибка! " + data.error);
+        }
+        else { self.error(""); }
     }
 }
 

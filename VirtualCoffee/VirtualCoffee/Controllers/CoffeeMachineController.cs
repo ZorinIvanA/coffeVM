@@ -34,6 +34,7 @@ namespace VirtualCoffee.Controllers
             base(String.Format("Товара {0} нет в автомате!", item)) { }
     }
 
+
     public class CoffeeMachineController : ApiController
     {
         CoffeDataContext _ctx;
@@ -47,7 +48,7 @@ namespace VirtualCoffee.Controllers
         public CoffeeMachineController()
         {
             _ctx = new CoffeDataContext();
-            String path = HttpContext.Current.Server.MapPath("~/App_Data")+"\\";
+            String path = HttpContext.Current.Server.MapPath("~/App_Data") + "\\";
             _ctx.Load(path);
             _path = path;
         }
@@ -62,12 +63,12 @@ namespace VirtualCoffee.Controllers
             return await Task.Run(() =>
             {
                 PurseModel model = new PurseModel();
-                model.Coins = new CoinsInPurseModel[_ctx.UserPurse.Item.Coins.Count];
+                model.Coins = new CoinInPurseModel[_ctx.UserPurse.Item.Coins.Count];
                 Int32 i = 0;
 
                 foreach (var coin in _ctx.UserPurse.Item.Coins.ToArray())
                 {
-                    model.Coins[i] = new CoinsInPurseModel() { value = coin.Value, count = coin.Count.ToString() };
+                    model.Coins[i] = new CoinInPurseModel() { value = coin.Value, count = coin.Count.ToString() };
                     i++;
                 }
                 return model;
@@ -84,12 +85,12 @@ namespace VirtualCoffee.Controllers
             return await Task.Run(() =>
             {
                 PurseModel model = new PurseModel();
-                model.Coins = new CoinsInPurseModel[_ctx.CoffeMachinePurse.Item.Coins.Count];
+                model.Coins = new CoinInPurseModel[_ctx.CoffeMachinePurse.Item.Coins.Count];
                 Int32 i = 0;
 
                 foreach (var coin in _ctx.CoffeMachinePurse.Item.Coins.ToArray())
                 {
-                    model.Coins[i] = new CoinsInPurseModel()
+                    model.Coins[i] = new CoinInPurseModel()
                     {
                         value = coin.Value,
                         count = coin.Count.ToString()
@@ -197,34 +198,10 @@ namespace VirtualCoffee.Controllers
                     }
 
                     Double sumToMessage = sum;
-                    Dictionary<String, Int32> coinsToChange = new Dictionary<string, int>();
-                    coinsToChange.Add("10", 0);
-                    coinsToChange.Add("5", 0);
-                    coinsToChange.Add("2", 0);
-                    coinsToChange.Add("1", 0);
+                    Dictionary<String, Int32> coinsToChange = MakeChange(sum);
 
-                    for (Int32 i = 0; i < coinsToChange.Count; i++)
-                    {
-                        var coin = coinsToChange.ElementAt(i);
-                        Int32 intCoin = Int32.Parse(coin.Key);
-                        Int32 coinInMachine =
-                            _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Key).Count;
-                        while ((sum >= intCoin) && (coinInMachine > 0))
-                        {
-                            sum -= intCoin;
-                            coinsToChange[coin.Key]++;
-                            coinInMachine--;
-                        }
-                    }
-
-                    foreach (var coin in coinsToChange)
-                    {
-                        _ctx.UserPurse.Item.Coins.First(x => x.Value == coin.Key).Count += coin.Value;
-                        _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Key).Count -= coin.Value;
-                    }
-
-                    _ctx.PurchaseInfo.Item.PayedSum = 0;
-                    _ctx.Save(_path);
+                    MakeUpdatesInPurses(coinsToChange);
+                    
                     return new
                     {
                         error = String.Empty,
@@ -240,6 +217,51 @@ namespace VirtualCoffee.Controllers
                     };
                 }
             });
+        }
+
+        /// <summary>
+        /// Добавляет изменения в "БД"
+        /// </summary>
+        /// <param name="coinsToChange">Монеты для сдачи</param>
+        protected void MakeUpdatesInPurses(Dictionary<String, Int32> coinsToChange)
+        {
+            foreach (var coin in coinsToChange)
+            {
+                _ctx.UserPurse.Item.Coins.First(x => x.Value == coin.Key).Count += coin.Value;
+                _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Key).Count -= coin.Value;
+            }
+            _ctx.PurchaseInfo.Item.PayedSum = 0;
+            _ctx.Save(_path);
+        }
+
+        /// <summary>
+        /// Готовит сдачу к выдаче
+        /// </summary>
+        /// <param name="sum">Сумма сдачи</param>
+        /// <returns>Монеты для сдачи</returns>
+        protected Dictionary<String, Int32> MakeChange(Double sum)
+        {
+            Dictionary<String, Int32> coinsToChange = new Dictionary<string, int>();
+            coinsToChange = new Dictionary<string, int>();
+            coinsToChange.Add("10", 0);
+            coinsToChange.Add("5", 0);
+            coinsToChange.Add("2", 0);
+            coinsToChange.Add("1", 0);
+
+            for (Int32 i = 0; i < coinsToChange.Count; i++)
+            {
+                var coin = coinsToChange.ElementAt(i);
+                Int32 intCoin = Int32.Parse(coin.Key);
+                Int32 coinInMachine =
+                    _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Key).Count;
+                while ((sum >= intCoin) && (coinInMachine > 0))
+                {
+                    sum -= intCoin;
+                    coinsToChange[coin.Key]++;
+                    coinInMachine--;
+                }
+            }
+            return coinsToChange;
         }
 
         /// <summary>

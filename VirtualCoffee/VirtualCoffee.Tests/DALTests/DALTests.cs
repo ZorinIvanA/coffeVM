@@ -17,23 +17,7 @@ namespace VirtualCoffee.Tests.RepositoryTests
 
         }
 
-        [TestMethod]
-        public void TestLoadShouldSucceed()
-        {
-            CoffeMachinePurseDataSet coffee = new CoffeMachinePurseDataSet();
-            coffee.Load("Coffee.xml");
-            Assert.IsNotNull(coffee.Item);
-            Assert.IsNotNull(coffee.Item.Coins);
-            Assert.AreEqual(4, coffee.Item.Coins.Count);
-            Assert.AreEqual("1", coffee.Item.Coins[0].Value);
-            Assert.AreEqual(100, coffee.Item.Coins[0].Count);
-            Assert.AreEqual("2", coffee.Item.Coins[1].Value);
-            Assert.AreEqual(100, coffee.Item.Coins[1].Count);
-            Assert.AreEqual("5", coffee.Item.Coins[2].Value);
-            Assert.AreEqual(100, coffee.Item.Coins[2].Count);
-            Assert.AreEqual("10", coffee.Item.Coins[3].Value);
-            Assert.AreEqual(100, coffee.Item.Coins[3].Count);
-        }
+       
 
         [TestMethod]
         [ExpectedException(typeof(FileNotFoundException))]
@@ -135,6 +119,25 @@ namespace VirtualCoffee.Tests.RepositoryTests
             Assert.AreEqual(20, Int32.Parse(userPurse.ChildNodes[2].Attributes["number"].Value));
             Assert.AreEqual("10", userPurse.ChildNodes[3].Attributes["kind"].Value);
             Assert.AreEqual(15, Int32.Parse(userPurse.ChildNodes[3].Attributes["number"].Value));
+        }
+
+        [TestMethod]
+        public void TestLoadShouldSucceed()
+        {
+            CoffeMachinePurseDataSet coffee = new CoffeMachinePurseDataSet();
+            coffee.Initialize("coffee.xml"); //Так себе решение...
+            coffee.Load("Coffee.xml");
+            Assert.IsNotNull(coffee.Item);
+            Assert.IsNotNull(coffee.Item.Coins);
+            Assert.AreEqual(4, coffee.Item.Coins.Count);
+            Assert.AreEqual("1", coffee.Item.Coins[0].Value);
+            Assert.AreEqual(100, coffee.Item.Coins[0].Count);
+            Assert.AreEqual("2", coffee.Item.Coins[1].Value);
+            Assert.AreEqual(100, coffee.Item.Coins[1].Count);
+            Assert.AreEqual("5", coffee.Item.Coins[2].Value);
+            Assert.AreEqual(100, coffee.Item.Coins[2].Count);
+            Assert.AreEqual("10", coffee.Item.Coins[3].Value);
+            Assert.AreEqual(100, coffee.Item.Coins[3].Count);
         }
 
         [TestMethod]

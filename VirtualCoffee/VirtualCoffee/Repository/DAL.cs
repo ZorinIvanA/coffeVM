@@ -241,6 +241,9 @@ namespace VirtualCoffee.Repository
         public Double PayedSum { get; set; }
     }
 
+    /// <summary>
+    /// Набор данных для покупки
+    /// </summary>
     public class BuyDataSet : CoffeeDataSet<BuyData>
     {
         public override void Initialize(string fileName)

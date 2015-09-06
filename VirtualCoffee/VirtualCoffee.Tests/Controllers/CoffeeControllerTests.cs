@@ -41,6 +41,16 @@ namespace VirtualCoffee.Tests.Controllers
         {
             return this.GetTotalMoneyInMachine();
         }
+
+        public Dictionary<String, Int32> MakeChangeForTests(Double sum)
+        {
+            return this.MakeChange(sum);
+        }
+
+        public void MakeUpdatesInPursesForTests(Dictionary<String, Int32> coinsToChange)
+        {
+            this.MakeUpdatesInPurses(coinsToChange);
+        }
     }
 
     [TestClass]
@@ -282,6 +292,39 @@ namespace VirtualCoffee.Tests.Controllers
             PurchaseInfoModel result = _controller.GetPurchaseInfo().Result;
             Assert.IsNotNull(result);
             Assert.AreEqual(10, result.Sum);
+        }
+
+        [TestMethod]
+        public void TestMakeChangeShouldSuccess()
+        {
+            Double sum = 21;
+            var coins = _controller.MakeChangeForTests(sum);
+            Assert.IsNotNull(coins);
+            Assert.AreEqual(4, coins.Count);
+            Assert.AreEqual(2, coins["10"]);
+            Assert.AreEqual(1, coins["1"]);
+        }
+
+        [TestMethod]
+        public void TestMakeUpdatesInPursesShouldSuccess()
+        {
+            Dictionary<String, Int32> coinsToChange = new Dictionary<string, int>();
+            coinsToChange = new Dictionary<string, int>();
+            coinsToChange.Add("10", 1);
+            coinsToChange.Add("5", 2);
+            coinsToChange.Add("2", 3);
+            coinsToChange.Add("1", 4);
+            _ctx.Init(String.Empty);
+            _controller.MakeUpdatesInPursesForTests(coinsToChange);
+            Assert.AreEqual(16, _ctx.UserPurse.Item.Coins[3].Count);
+            Assert.AreEqual(22, _ctx.UserPurse.Item.Coins[2].Count);
+            Assert.AreEqual(33, _ctx.UserPurse.Item.Coins[1].Count);
+            Assert.AreEqual(14, _ctx.UserPurse.Item.Coins[0].Count);
+            Assert.AreEqual(99, _ctx.CoffeMachinePurse.Item.Coins[3].Count);
+            Assert.AreEqual(98, _ctx.CoffeMachinePurse.Item.Coins[2].Count);
+            Assert.AreEqual(97, _ctx.CoffeMachinePurse.Item.Coins[1].Count);
+            Assert.AreEqual(96, _ctx.CoffeMachinePurse.Item.Coins[0].Count);
+            Assert.AreEqual(0, _ctx.PurchaseInfo.Item.PayedSum);
         }
     }
 }
