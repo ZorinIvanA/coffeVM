@@ -87,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\CoffeeControllerTests.cs" />
+    <Compile Include="Controllers\PurseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Controllers\HomeControllerTest.cs" />
     <Compile Include="DALTests\DALTests.cs" />

@@ -24,6 +24,23 @@ namespace VirtualCoffee.Repository
         public List<Coin> Coins { get; set; }
 
         /// <summary>
+        /// Сумма монет в кошельке
+        /// </summary>
+        public Double Sum
+        {
+            get
+            {
+                Double result = 0;
+                foreach (var coin in this.Coins)
+                {
+                    result += coin.Count * (Int32.Parse(coin.Value));
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
         /// Конструктор
         /// </summary>
         public PurseBase()

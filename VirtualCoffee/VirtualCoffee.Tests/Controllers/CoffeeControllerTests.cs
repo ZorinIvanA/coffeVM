@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using System.Linq;
+
 using VirtualCoffee.Controllers;
 using VirtualCoffee.Repository;
 using System.Collections.Generic;
@@ -37,17 +39,12 @@ namespace VirtualCoffee.Tests.Controllers
     {
         public CoffeMachineControllerForTests(DataContextMock ctx) : base(ctx) { }
 
-        public Double GetTotalMoneyForTest()
-        {
-            return this.GetTotalMoneyInMachine();
-        }
-
-        public Dictionary<String, Int32> MakeChangeForTests(Double sum)
+        public PurseBase MakeChangeForTests(Double sum)
         {
             return this.MakeChange(sum);
         }
 
-        public void MakeUpdatesInPursesForTests(Dictionary<String, Int32> coinsToChange)
+        public void MakeUpdatesInPursesForTests(PurseBase coinsToChange)
         {
             this.MakeUpdatesInPurses(coinsToChange);
         }
@@ -206,29 +203,6 @@ namespace VirtualCoffee.Tests.Controllers
         }
 
         [TestMethod]
-        public void TestGetChangeShouldFailWhenLowMoneyInMachine()
-        {
-            _ctx.Init(String.Empty);
-            _ctx.PurchaseInfo.Item.PayedSum = 15;
-            _ctx.CoffeMachinePurse.Item.Coins[3].Count = 0;
-            _ctx.CoffeMachinePurse.Item.Coins[2].Count = 0;
-            _ctx.CoffeMachinePurse.Item.Coins[1].Count = 2;
-            _ctx.CoffeMachinePurse.Item.Coins[0].Count = 1;
-            var result = _controller.GetChange().Result;
-            Assert.AreEqual(15, _ctx.UserPurse.Item.Coins[3].Count);
-            Assert.AreEqual(20, _ctx.UserPurse.Item.Coins[2].Count);
-            Assert.AreEqual(30, _ctx.UserPurse.Item.Coins[1].Count);
-            Assert.AreEqual(10, _ctx.UserPurse.Item.Coins[0].Count);
-            Assert.AreEqual(15, _ctx.PurchaseInfo.Item.PayedSum);
-            Assert.AreEqual(0, _ctx.CoffeMachinePurse.Item.Coins[3].Count);
-            Assert.AreEqual(0, _ctx.CoffeMachinePurse.Item.Coins[2].Count);
-            Assert.AreEqual(2, _ctx.CoffeMachinePurse.Item.Coins[1].Count);
-            Assert.AreEqual(1, _ctx.CoffeMachinePurse.Item.Coins[0].Count);
-            Assert.AreEqual("В автомате не хватает денег на сдачу!",
-                result.GetType().GetProperty("error").GetValue(result));
-        }
-
-        [TestMethod]
         public void TestGetChangeShouldReturn0_10__2_5__2_2__1_1()
         {
             _ctx.Init(String.Empty);
@@ -249,19 +223,6 @@ namespace VirtualCoffee.Tests.Controllers
             Assert.AreEqual(6, _ctx.CoffeMachinePurse.Item.Coins[0].Count);
         }
 
-        [TestMethod]
-        public void TestGetTotalMoneyInMachineShouldSuccess()
-        {
-            _ctx.Init(String.Empty);
-            _ctx.PurchaseInfo.Item.PayedSum = 15;
-            _ctx.CoffeMachinePurse.Item.Coins[3].Count = 0;
-            _ctx.CoffeMachinePurse.Item.Coins[2].Count = 0;
-            _ctx.CoffeMachinePurse.Item.Coins[1].Count = 2;
-            _ctx.CoffeMachinePurse.Item.Coins[0].Count = 1;
-            Double result = _controller.GetTotalMoneyForTest();
-
-            Assert.AreEqual(5, result);
-        }
 
         [TestMethod]
         public void TestGetGoodsShouldSucceed()
@@ -300,20 +261,32 @@ namespace VirtualCoffee.Tests.Controllers
             Double sum = 21;
             var coins = _controller.MakeChangeForTests(sum);
             Assert.IsNotNull(coins);
-            Assert.AreEqual(4, coins.Count);
-            Assert.AreEqual(2, coins["10"]);
-            Assert.AreEqual(1, coins["1"]);
+            Assert.AreEqual(4, coins.Coins.Count);
+            Assert.AreEqual(2, coins.Coins.First(x => x.Value == "10").Count);
+            Assert.AreEqual(1, coins.Coins.First(x => x.Value == "1").Count);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(NotEnoughtMoneyException))]
+        public void TestMakeChangeShouldFailWhenNoMoneyKind1InMachine()
+        {
+            _ctx.Init(String.Empty);
+            _ctx.PurchaseInfo.Item.PayedSum = 11;
+            _ctx.CoffeMachinePurse.Item.Coins[3].Count = 10;
+            _ctx.CoffeMachinePurse.Item.Coins[2].Count = 10;
+            _ctx.CoffeMachinePurse.Item.Coins[1].Count = 10;
+            _ctx.CoffeMachinePurse.Item.Coins[0].Count = 0;
+            var result = _controller.MakeChangeForTests(11);
         }
 
         [TestMethod]
         public void TestMakeUpdatesInPursesShouldSuccess()
         {
-            Dictionary<String, Int32> coinsToChange = new Dictionary<string, int>();
-            coinsToChange = new Dictionary<string, int>();
-            coinsToChange.Add("10", 1);
-            coinsToChange.Add("5", 2);
-            coinsToChange.Add("2", 3);
-            coinsToChange.Add("1", 4);
+            PurseBase coinsToChange = new TempPurse();
+            coinsToChange.Coins.Add(new Coin() { Value = "10", Count = 1 });
+            coinsToChange.Coins.Add(new Coin() { Value = "5", Count = 2 });
+            coinsToChange.Coins.Add(new Coin() { Value = "2", Count = 3 });
+            coinsToChange.Coins.Add(new Coin() { Value = "1", Count = 4 });
             _ctx.Init(String.Empty);
             _controller.MakeUpdatesInPursesForTests(coinsToChange);
             Assert.AreEqual(16, _ctx.UserPurse.Item.Coins[3].Count);
@@ -325,6 +298,52 @@ namespace VirtualCoffee.Tests.Controllers
             Assert.AreEqual(97, _ctx.CoffeMachinePurse.Item.Coins[1].Count);
             Assert.AreEqual(96, _ctx.CoffeMachinePurse.Item.Coins[0].Count);
             Assert.AreEqual(0, _ctx.PurchaseInfo.Item.PayedSum);
+        }
+
+        [TestMethod]
+        public void TestGetChangeShouldFailBecauseThereIsNoRequiredCoinsForChange()
+        {
+            _ctx.Init(String.Empty);
+            _ctx.PurchaseInfo.Item.PayedSum = 11;
+            _ctx.CoffeMachinePurse.Item.Coins[3].Count = 10;
+            _ctx.CoffeMachinePurse.Item.Coins[2].Count = 10;
+            _ctx.CoffeMachinePurse.Item.Coins[1].Count = 10;
+            _ctx.CoffeMachinePurse.Item.Coins[0].Count = 0;
+            var result = _controller.GetChange().Result;
+            Assert.AreEqual(15, _ctx.UserPurse.Item.Coins[3].Count);
+            Assert.AreEqual(20, _ctx.UserPurse.Item.Coins[2].Count);
+            Assert.AreEqual(30, _ctx.UserPurse.Item.Coins[1].Count);
+            Assert.AreEqual(10, _ctx.UserPurse.Item.Coins[0].Count);
+            Assert.AreEqual(11, _ctx.PurchaseInfo.Item.PayedSum);
+            Assert.AreEqual(10, _ctx.CoffeMachinePurse.Item.Coins[3].Count);
+            Assert.AreEqual(10, _ctx.CoffeMachinePurse.Item.Coins[2].Count);
+            Assert.AreEqual(10, _ctx.CoffeMachinePurse.Item.Coins[1].Count);
+            Assert.AreEqual(0, _ctx.CoffeMachinePurse.Item.Coins[0].Count);
+            Assert.AreEqual("В автомате не хватает монет достоинством 1!",
+                result.GetType().GetProperty("error").GetValue(result));
+        }
+
+        [TestMethod]
+        public void TestGetChangeShouldFailWhenLowMoneyInMachine()
+        {
+            _ctx.Init(String.Empty);
+            _ctx.PurchaseInfo.Item.PayedSum = 15;
+            _ctx.CoffeMachinePurse.Item.Coins[3].Count = 0;
+            _ctx.CoffeMachinePurse.Item.Coins[2].Count = 0;
+            _ctx.CoffeMachinePurse.Item.Coins[1].Count = 2;
+            _ctx.CoffeMachinePurse.Item.Coins[0].Count = 1;
+            var result = _controller.GetChange().Result;
+            Assert.AreEqual(15, _ctx.UserPurse.Item.Coins[3].Count);
+            Assert.AreEqual(20, _ctx.UserPurse.Item.Coins[2].Count);
+            Assert.AreEqual(30, _ctx.UserPurse.Item.Coins[1].Count);
+            Assert.AreEqual(10, _ctx.UserPurse.Item.Coins[0].Count);
+            Assert.AreEqual(15, _ctx.PurchaseInfo.Item.PayedSum);
+            Assert.AreEqual(0, _ctx.CoffeMachinePurse.Item.Coins[3].Count);
+            Assert.AreEqual(0, _ctx.CoffeMachinePurse.Item.Coins[2].Count);
+            Assert.AreEqual(2, _ctx.CoffeMachinePurse.Item.Coins[1].Count);
+            Assert.AreEqual(1, _ctx.CoffeMachinePurse.Item.Coins[0].Count);
+            Assert.AreEqual("В автомате не хватает денег на сдачу!",
+                result.GetType().GetProperty("error").GetValue(result));
         }
     }
 }

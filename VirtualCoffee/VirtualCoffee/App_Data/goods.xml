@@ -1,1 +1,1 @@
-﻿<CoffeGoods><Goods><GoodsItem kind="tea" price="13" number="9" /><GoodsItem kind="coffee" price="18" number="20" /><GoodsItem kind="cappuccino" price="21" number="10" /><GoodsItem kind="juice" price="35" number="15" /></Goods></CoffeGoods>
+﻿<CoffeGoods><Goods><GoodsItem kind="tea" price="13" number="10" /><GoodsItem kind="coffee" price="18" number="20" /><GoodsItem kind="cappuccino" price="21" number="10" /><GoodsItem kind="juice" price="35" number="15" /></Goods></CoffeGoods>

@@ -34,6 +34,13 @@ namespace VirtualCoffee.Controllers
             base(String.Format("Товара {0} нет в автомате!", item)) { }
     }
 
+    public class NotEnoughtMoneyException : Exception
+    {
+        public NotEnoughtMoneyException(String kind) : base(String.Format("В автомате не хватает монет достоинством {0}!", kind)) { }
+    }
+
+    public class TempPurse : PurseBase
+    { }
 
     public class CoffeeMachineController : ApiController
     {
@@ -192,16 +199,13 @@ namespace VirtualCoffee.Controllers
                 try
                 {
                     Double sum = _ctx.PurchaseInfo.Item.PayedSum;
-                    if (this.GetTotalMoneyInMachine() <= sum)
-                    {
-                        throw new Exception("В автомате не хватает денег на сдачу!");
-                    }
+
 
                     Double sumToMessage = sum;
-                    Dictionary<String, Int32> coinsToChange = MakeChange(sum);
+                    PurseBase coinsToChange = MakeChange(sum);
 
                     MakeUpdatesInPurses(coinsToChange);
-                    
+
                     return new
                     {
                         error = String.Empty,
@@ -223,12 +227,12 @@ namespace VirtualCoffee.Controllers
         /// Добавляет изменения в "БД"
         /// </summary>
         /// <param name="coinsToChange">Монеты для сдачи</param>
-        protected void MakeUpdatesInPurses(Dictionary<String, Int32> coinsToChange)
+        protected void MakeUpdatesInPurses(PurseBase coinsToChange)
         {
-            foreach (var coin in coinsToChange)
+            foreach (var coin in coinsToChange.Coins)
             {
-                _ctx.UserPurse.Item.Coins.First(x => x.Value == coin.Key).Count += coin.Value;
-                _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Key).Count -= coin.Value;
+                _ctx.UserPurse.Item.Coins.First(x => x.Value == coin.Value).Count += coin.Count;
+                _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Value).Count -= coin.Count;
             }
             _ctx.PurchaseInfo.Item.PayedSum = 0;
             _ctx.Save(_path);
@@ -239,29 +243,43 @@ namespace VirtualCoffee.Controllers
         /// </summary>
         /// <param name="sum">Сумма сдачи</param>
         /// <returns>Монеты для сдачи</returns>
-        protected Dictionary<String, Int32> MakeChange(Double sum)
+        protected PurseBase MakeChange(Double sum)
         {
-            Dictionary<String, Int32> coinsToChange = new Dictionary<string, int>();
-            coinsToChange = new Dictionary<string, int>();
-            coinsToChange.Add("10", 0);
-            coinsToChange.Add("5", 0);
-            coinsToChange.Add("2", 0);
-            coinsToChange.Add("1", 0);
-
-            for (Int32 i = 0; i < coinsToChange.Count; i++)
+            if (_ctx.CoffeMachinePurse.Item.Sum <= sum)
             {
-                var coin = coinsToChange.ElementAt(i);
-                Int32 intCoin = Int32.Parse(coin.Key);
+                throw new Exception("В автомате не хватает денег на сдачу!");
+            }
+
+            TempPurse purse = new TempPurse();
+            purse.Coins.Add(new Coin() { Value = "10", Count = 0 });
+            purse.Coins.Add(new Coin() { Value = "5", Count = 0 });
+            purse.Coins.Add(new Coin() { Value = "2", Count = 0 });
+            purse.Coins.Add(new Coin() { Value = "1", Count = 0 });
+
+            Double sumToWork = sum;
+
+            for (Int32 i = 0; i < purse.Coins.Count; i++)
+            {
+                var coin = purse.Coins[i];
+                Int32 intCoin = Int32.Parse(coin.Value);
                 Int32 coinInMachine =
-                    _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Key).Count;
-                while ((sum >= intCoin) && (coinInMachine > 0))
+                    _ctx.CoffeMachinePurse.Item.Coins.First(x => x.Value == coin.Value).Count;
+                while ((sumToWork >= intCoin) && (coinInMachine > 0))
                 {
-                    sum -= intCoin;
-                    coinsToChange[coin.Key]++;
+                    sumToWork -= intCoin;
+                    purse.Coins[i].Count++;
                     coinInMachine--;
                 }
             }
-            return coinsToChange;
+
+            if (purse.Sum == sum)
+            {
+                return purse;
+            }
+            else
+            {
+                throw new NotEnoughtMoneyException("1");
+            }
         }
 
         /// <summary>
@@ -328,19 +346,5 @@ namespace VirtualCoffee.Controllers
 
         }
 
-        /// <summary>
-        /// Рассчитывает общую сумму денег в машине
-        /// </summary>
-        /// <returns>Сумма номиналов монет</returns>
-        protected Double GetTotalMoneyInMachine()
-        {
-            Double result = 0;
-            foreach (var coin in this._ctx.CoffeMachinePurse.Item.Coins)
-            {
-                result += coin.Count * (Int32.Parse(coin.Value));
-            }
-
-            return result;
-        }
     }
 }
